@@ -1,26 +1,32 @@
 const express = require('express');
+const Student = require('/models/Student');
 const router = express.Router();
-const Admin = require('/models/Admin');
 
-// Create a new admin
-router.post('/', async (req, res) => {
-    try {
-        const admin = new Admin(req.body);
-        await admin.save();
-        res.status(201).send(admin);
-    } catch (err) {
-        res.status(400).send(err);
-    }
+// Student sign-in route
+router.post('/signin', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const student = await Student.findOne({ email });
+    if (!student) return res.status(400).json({ msg: 'Student not found' });
+    
+    // In a real app, you should use bcrypt for password comparison
+    if (password !== student.password) return res.status(400).json({ msg: 'Invalid credentials' });
+
+    res.json({ student });
+  } catch (err) {
+    res.status(500).send('Server error');
+  }
 });
 
-// Get all admins
-router.get('/', async (req, res) => {
-    try {
-        const admins = await Admin.find();
-        res.status(200).send(admins);
-    } catch (err) {
-        res.status(500).send(err);
-    }
+// Get student details
+router.get('/:id', async (req, res) => {
+  try {
+    const student = await Student.findById(req.params.id);
+    if (!student) return res.status(404).json({ msg: 'Student not found' });
+    res.json(student);
+  } catch (err) {
+    res.status(500).send('Server error');
+  }
 });
 
 module.exports = router;
